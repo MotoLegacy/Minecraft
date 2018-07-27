@@ -442,6 +442,9 @@ class Window(pyglet.window.Window):
         # When flying gravity has no effect and speed is increased.
         self.flying = False
 
+        # Debug menu displays the player's coordinates and their framerate
+        self.debug = False
+
         # Strafing is moving lateral to the direction you are facing,
         # e.g. moving to the left or right while continuing to face forward.
         #
@@ -485,9 +488,18 @@ class Window(pyglet.window.Window):
         # Instance of the model that handles the world.
         self.model = Model()
 
-        # The label that is displayed in the top left of the canvas.
+        # Debug Details
+        
         self.label = pyglet.text.Label('', font_name='Arial', font_size=18,
             x=10, y=self.height - 10, anchor_x='left', anchor_y='top',
+            color=(0, 0, 0, 255))
+        
+        self.label2 = pyglet.text.Label('', font_name='Arial', font_size=18,
+            x=10, y=self.height - 30, anchor_x='left', anchor_y='top',
+            color=(0, 0, 0, 255))
+
+        self.label3 = pyglet.text.Label('', font_name='Arial', font_size=18,
+            x=10, y=self.height - 70, anchor_x='left', anchor_y='top',
             color=(0, 0, 0, 255))
 
         # This call schedules the `update()` method to be called
@@ -733,6 +745,8 @@ class Window(pyglet.window.Window):
             self.set_exclusive_mouse(False)
         elif symbol == key.TAB:
             self.flying = not self.flying
+        elif symbol == key.F3:
+            self.debug = not self.debug
         elif symbol in self.num_keys:
             index = (symbol - self.num_keys[0]) % len(self.inventory)
             self.block = self.inventory[index]
@@ -763,7 +777,11 @@ class Window(pyglet.window.Window):
 
         """
         # label
+
         self.label.y = height - 10
+        self.label2.y = height - 30
+        self.label3.y = height - 70
+
         # reticle
         if self.reticle:
             self.reticle.delete()
@@ -814,8 +832,10 @@ class Window(pyglet.window.Window):
         self.model.batch.draw()
         self.draw_focused_block()
         self.set_2d()
-        self.draw_label()
         self.draw_reticle()
+
+        if self.debug:
+            self.draw_debug()
 
     def draw_focused_block(self):
         """ Draw black edges around the block that is currently under the
@@ -832,15 +852,23 @@ class Window(pyglet.window.Window):
             pyglet.graphics.draw(24, GL_QUADS, ('v3f/static', vertex_data))
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 
-    def draw_label(self):
-        """ Draw the label in the top left of the screen.
+    def draw_debug(self):
+        """ Draws player's framerate and coordiates, previously 'draw_label'
 
         """
         x, y, z = self.position
-        self.label.text = '%02d (%.2f, %.2f, %.2f) %d / %d' % (
+
+        '''self.label.text = '%02d (%.2f, %.2f, %.2f) %d / %d' % (
             pyglet.clock.get_fps(), x, y, z,
-            len(self.model._shown), len(self.model.world))
+            len(self.model._shown), len(self.model.world))''' # Old Debug text
+
+        self.label.text = 'MCPY 0.1'
+        self.label2.text = '%02d fps' % (pyglet.clock.get_fps())
+        self.label3.text = 'XYZ: %.2f / %.2f / %.2f' % (x, y, z)
+
         self.label.draw()
+        self.label2.draw()
+        self.label3.draw()
 
     def draw_reticle(self):
         """ Draw the crosshairs in the center of the screen.
