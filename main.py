@@ -49,8 +49,10 @@ def cube_vertices(x, y, z, n):
         x+n,y-n,z-n, x-n,y-n,z-n, x-n,y+n,z-n, x+n,y+n,z-n,  # back
     ]
 
-
-def tex_coord(x, y, n=4):
+# This 'n' var is the amount of vertical and horizontal blocks on the terrain image.
+# So if we had a 64x64 terrain image, 4 blocks could be fit vertically,
+# and 4 could be fit horizontally, so we make n = 4.
+def tex_coord(x, y, n = 16):
     """ Return the bounding vertices of the texture square.
 
     """
@@ -77,11 +79,15 @@ def tex_coords(top, bottom, side):
 TEXTURE_PATH = 'texture.png'
 
 # Bottom Left = Origin
-GRASS = tex_coords((1, 0), (0, 1), (0, 0))
-SAND = tex_coords((1, 1), (1, 1), (1, 1))
-BRICK = tex_coords((2, 0), (2, 0), (2, 0))
-STONE = tex_coords((2, 1), (2, 1), (2, 1))
-AIR = tex_coords((3, 0), (3, 0), (3, 0))
+GRASS = tex_coords((0, 15), (2, 15), (3, 15))
+SAND = tex_coords((2, 14), (2, 14), (2, 14))
+BRICK = tex_coords((7, 15), (7, 15), (7, 15))
+STONE = tex_coords((1, 15), (1, 15), (1, 15))
+BEDROCK = tex_coords((1, 14), (1, 14), (1, 14))
+AIR = tex_coords((4, 4), (4, 4), (4, 4))
+
+# Array of blocks that cannot be destroyed
+indestructable = [BEDROCK, AIR]
 
 FACES = [
     ( 0, 1, 0),
@@ -166,11 +172,11 @@ class Model(object):
         y = 0  # initial y height
         for x in xrange(-n, n + 1, s):
             for z in xrange(-n, n + 1, s):
-                # create a layer stone and grass everywhere.
+                # create a layer of bedrock and grass everywhere.
                 self.add_block((x, y - 2, z), GRASS, immediate=False)
-                self.add_block((x, y - 3, z), STONE, immediate=False)
+                self.add_block((x, y - 3, z), BEDROCK, immediate=False)
                 if x in (-n, n) or z in (-n, n):
-                    # create outer walls.
+                    # create invisible bedrock barrier.
                     for dy in xrange(-3, 128):
                         self.add_block((x, y + dy, z), AIR, immediate=False)
 
@@ -705,7 +711,7 @@ class Window(pyglet.window.Window):
                     self.model.add_block(previous, self.block)
             elif button == pyglet.window.mouse.LEFT and block:
                 texture = self.model.world[block]
-                if texture != AIR:
+                if texture not in indestructable:
                     self.model.remove_block(block)
         else:
             self.set_exclusive_mouse(True)
